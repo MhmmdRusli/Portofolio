@@ -63,7 +63,7 @@ export default function Navbar() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.2, ease: "easeOut" }}
-            className="absolute right-0 mt-3 flex flex-col gap-1 rounded-2xl border border-white/[0.08] bg-[rgba(12,15,46,0.92)] p-2 shadow-xl shadow-black/40 backdrop-blur-xl md:hidden"
+            className="absolute left-1/2 mt-3 flex w-[200px] -translate-x-1/2 flex-col gap-1 rounded-2xl border border-white/[0.08] bg-[rgba(12,15,46,0.92)] p-2 shadow-xl shadow-black/40 backdrop-blur-xl md:hidden"
           >
             {NAV_ITEMS.map(({ label, icon: Icon, href }) => (
               <a

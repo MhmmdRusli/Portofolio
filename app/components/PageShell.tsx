@@ -12,7 +12,7 @@ interface PageShellProps {
 export default function PageShell({ children, className = "" }: PageShellProps) {
   return (
     <main
-      className={`relative z-10 mx-auto w-full max-w-6xl px-5 sm:px-8 lg:px-12 ${className}`}
+      className={`relative z-10 mx-auto w-full max-w-7xl px-5 sm:px-8 lg:px-12 ${className}`}
     >
       {children}
     </main>
