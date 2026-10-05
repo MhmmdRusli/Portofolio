@@ -4,164 +4,183 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
-import { ExternalLink, ArrowRight, Terminal, Globe, Code2, LayoutTemplate, Palette, GitBranch, Database, Laptop } from "lucide-react";
+import type { CSSProperties, ReactNode } from "react";
+import { ArrowRight, Award, Code, Layers, type LucideIcon } from "lucide-react";
 
-import ProjectCover from "@/app/components/ProjectCover";
 import { PROJECTS } from "@/app/data/projects";
+import { CERTIFICATES } from "@/app/data/portfolio";
+import { TECHS } from "@/app/data/tech";
+import { TechLogo } from "./icons";
 
-// ── Placeholder Data ──
+/* ═══════════════ DATA ═══════════════ */
 
-const TABS = [
-  { id: "projects", label: "Projects" },
-  { id: "certificates", label: "Certificates" },
-  { id: "tech", label: "Tech Stack" },
-] as const;
-
-type TabId = typeof TABS[number]["id"];
-
-const CERTIFICATES = [
-  { id: 1, src: "/certificates/certificate-1.jpg", width: 1200, height: 900 },
-  { id: 2, src: "/certificates/certificate-2.jpg", width: 1200, height: 900 },
-  { id: 3, src: "/certificates/certificate-3.jpg", width: 1200, height: 900 },
-  { id: 4, src: "/certificates/certificate-4.jpg", width: 1200, height: 900 },
-  { id: 5, src: "/certificates/certificate-5.jpg", width: 1200, height: 900 },
-  { id: 6, src: "/certificates/certificate-6.jpg", width: 1200, height: 900 },
+const TABS: { id: string; label: string; icon: LucideIcon }[] = [
+  { id: "projects", label: "Projects", icon: Code },
+  { id: "certificates", label: "Certificates", icon: Award },
+  { id: "tech", label: "Tech Stack", icon: Layers },
 ];
 
-const TECH_STACK = [
-  { name: "HTML", icon: Globe },
-  { name: "CSS", icon: LayoutTemplate },
-  { name: "JavaScript", icon: Terminal },
-  { name: "TypeScript", icon: Code2 },
-  { name: "React", icon: Laptop },
-  { name: "Next.js", icon: Globe },
-  { name: "Tailwind CSS", icon: Palette },
-  { name: "Node.js", icon: Database },
-  { name: "Git", icon: GitBranch },
-  { name: "Figma", icon: Palette },
-];
+type TabId = "projects" | "certificates" | "tech";
 
-// ── Variants ──
+interface TechItem {
+  name: string;
+  /** Warna brand: untuk isi logo, tile, dan glow saat hover. */
+  color: string;
+  /** Logo siap render: BrandLogo untuk simple-icons, FileLogo untuk file SVG. */
+  logo: ReactNode;
+}
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 },
-  },
-  exit: { opacity: 0, transition: { duration: 0.2 } },
+// Sumber data ada di @/app/data/tech supaya logo di sini identik dengan yang
+// dipakai ProjectDetail. Urutan tampil ikut dari sana.
+const TECH_STACK: TechItem[] = TECHS.map((tech) => ({
+  name: tech.name,
+  color: tech.color,
+  logo: <TechLogo tech={tech} size={34} />,
+}));
+
+/* ═══════════════ ANIMASI (ringan) ═══════════════ */
+
+const EASE: [number, number, number, number] = [0.22, 1, 0.36, 1];
+
+const VIEWPORT = { once: true, margin: "-100px" } as const;
+
+const fade = {
+  initial: { opacity: 0, y: 10 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0 },
+  transition: { duration: 0.25 },
 };
 
-const itemVariants = {
-  hidden: { opacity: 0, y: 15 },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    transition: { duration: 0.4, ease: "easeOut" as any } 
-  },
+/** Arah masuk kartu mengikuti posisinya di baris: kiri, tengah, atau kanan. */
+const OFFSET = {
+  bottom: { x: 0, y: 28 },
+  left: { x: -36, y: 20 },
+  right: { x: 36, y: 20 },
+} as const;
+
+const directionOf = (index: number, columns: number) => {
+  const column = index % columns;
+  if (column === 0) return "left" as const;
+  if (column === columns - 1) return "right" as const;
+  return "bottom" as const;
 };
 
-// ── Components ──
+/** Props reveal untuk kartu: fade + geser + scale subtle, stagger per kolom. */
+const revealCard = (index: number, columns = 3) => ({
+  initial: { opacity: 0, ...OFFSET[directionOf(index, columns)], scale: 0.98 },
+  whileInView: { opacity: 1, x: 0, y: 0, scale: 1 },
+  viewport: VIEWPORT,
+  transition: { duration: 0.5, ease: EASE, delay: (index % columns) * 0.09 },
+});
+
+const CARD =
+  "rounded-2xl border border-white/[0.07] bg-[#0a0d17] transition-colors hover:border-white/[0.14]";
+
+/* ═══════════════ SECTION ═══════════════ */
 
 export default function PortfolioSection() {
   const [activeTab, setActiveTab] = useState<TabId>("projects");
 
   return (
-    <section id="portfolio" className="flex flex-col gap-12 py-24 lg:py-32">
-      
-      {/* ── Header ── */}
-      <div className="flex flex-col items-center text-center max-w-3xl mx-auto px-4">
-        <motion.span 
-          initial="hidden" whileInView="visible" viewport={{ once: true }} variants={itemVariants} 
-          className="mb-4 font-mono text-sm font-semibold tracking-widest text-[var(--color-accent)]"
-        >
-          MY PORTFOLIO
-        </motion.span>
-        <motion.h2 
-          initial="hidden" whileInView="visible" viewport={{ once: true }} variants={itemVariants} 
-          className="mb-6 text-4xl font-extrabold tracking-tight text-white sm:text-5xl"
-        >
-          Selected Works
-        </motion.h2>
-        <motion.p 
-          initial="hidden" whileInView="visible" viewport={{ once: true }} variants={itemVariants} 
-          className="text-lg text-[var(--color-text-muted)] sm:text-xl"
-        >
-          A collection of projects and certifications representing my journey and skills in digital creation.
-        </motion.p>
-      </div>
+    <section id="portfolio" className="overflow-x-clip py-24 lg:py-32">
+      {/* Judul */}
+      <motion.h2
+        initial={{ opacity: 0, y: 28, scale: 0.98 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={VIEWPORT}
+        transition={{ duration: 0.55, ease: EASE }}
+        className="text-center text-[clamp(2.75rem,6vw,5rem)] font-extrabold leading-none tracking-tight text-[#eef0ff]"
+      >
+        Portfolio
+      </motion.h2>
 
-      {/* ── Tabs Navigation ── */}
-      <div className="flex w-full justify-center px-4">
-        <div className="flex flex-wrap justify-center gap-2 rounded-2xl border border-white/[0.08] bg-[var(--color-bg-secondary)] p-1.5 shadow-lg backdrop-blur-md">
-          {TABS.map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`relative rounded-xl px-4 py-2 text-sm font-medium transition-colors ${
-                  isActive ? "text-white" : "text-[var(--color-text-secondary)] hover:text-white hover:bg-white/[0.04]"
-                }`}
-              >
-                {isActive && (
-                  <motion.div
-                    layoutId="activeTabIndicator"
-                    className="absolute inset-0 z-0 rounded-xl bg-[var(--color-accent)] shadow-[0_0_15px_var(--color-accent-glow)]"
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    transition={{ type: "spring", bounce: 0.2, duration: 0.6 } as any}
-                  />
-                )}
-                <span className="relative z-10">{tab.label}</span>
-              </button>
-            );
+      {/* Tab bar */}
+      <motion.div
+        initial={{ opacity: 0, y: 24, scale: 0.98 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
+        viewport={VIEWPORT}
+        transition={{ duration: 0.55, ease: EASE, delay: 0.1 }}
+        role="tablist"
+        className="mt-10 grid grid-cols-3 gap-1 rounded-2xl border border-white/[0.07] bg-[#0b0e19] p-1.5 lg:mt-12"
+      >
+        {TABS.map((tab) => {
+          const isActive = activeTab === tab.id;
+          const Icon = tab.icon;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              onClick={() => setActiveTab(tab.id as TabId)}
+              className={`relative flex h-16 flex-col items-center justify-center gap-1.5 rounded-xl text-xs font-bold transition-colors sm:h-[64px] sm:text-base ${
+                isActive ? "text-white" : "text-white/55 hover:text-white"
+              }`}
+            >
+              {isActive && (
+                <motion.span
+                  layoutId="portfolioTab"
+                  className="absolute inset-0 rounded-xl bg-[#0f1d4d]"
+                  transition={{ type: "spring", bounce: 0.15, duration: 0.45 }}
+                />
+              )}
+              <Icon size={18} className="relative z-10" />
+              <span className="relative z-10">{tab.label}</span>
+            </button>
+);
           })}
-        </div>
-      </div>
+      </motion.div>
 
-      {/* ── Tab Content ── */}
-      <div className="min-h-[500px] w-full px-4 sm:px-0">
+      {/* Isi tab */}
+      <div className="mt-9 min-h-[420px]">
         <AnimatePresence mode="wait">
-          
           {activeTab === "projects" && (
             <motion.div
               key="projects"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+              {...fade}
+              className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-3"
             >
-              {PROJECTS.map((project) => (
-                <motion.div key={project.id} variants={itemVariants} className="card group flex flex-col overflow-hidden">
-                  <ProjectCover
-                    src={project.image}
-                    alt={`${project.name} project cover preview`}
-                  />
-                  <div className="flex flex-1 flex-col p-6">
-                    <div className="mb-2 flex items-center justify-between">
-                      <span className="text-xs font-semibold tracking-wider text-[var(--color-accent)]">{project.category}</span>
-                      <ExternalLink size={16} className="text-[var(--color-text-muted)] transition-colors group-hover:text-white" />
-                    </div>
-                    <h3 className="mb-2 text-xl font-bold text-white transition-colors group-hover:text-[var(--color-accent)]">{project.name}</h3>
-                    <p className="mb-6 flex-1 text-sm text-[var(--color-text-muted)] line-clamp-3">{project.shortDescription}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {project.technologies.map(tech => (
-                        <span key={tech} className="rounded bg-white/[0.04] px-2 py-1 text-xs font-medium text-[var(--color-text-secondary)] border border-white/[0.04]">
-                          {tech}
-                        </span>
-                      ))}
-                    </div>
-                    <Link
-                      href={`/projects/${project.slug}`}
-                      aria-label={`View details for ${project.name}`}
-                      className="mt-auto inline-flex items-center gap-1.5 pt-5 text-sm font-semibold text-[var(--color-text-secondary)] transition-colors duration-200 hover:text-[var(--color-accent)]"
-                    >
-                      View Details
-                      <ArrowRight size={15} strokeWidth={2} className="transition-transform duration-200 group-hover:translate-x-1" />
-                    </Link>
+              {PROJECTS.map((project, i) => (
+                <motion.div
+                  key={project.id}
+                  {...revealCard(i)}
+                  className={`flex flex-col p-[18px] ${CARD}`}
+                >
+                  <div className="relative aspect-[2/1] overflow-hidden rounded-[10px] bg-[#121727]">
+                    {project.image ? (
+                      <Image
+                        src={project.image}
+                        alt={`Preview ${project.name}`}
+                        fill
+                        sizes="(min-width: 1024px) 300px, (min-width: 640px) 45vw, 100vw"
+                        priority={i < 3}
+                        className="object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center">
+                        <Code size={28} className="text-white/25" />
+                      </div>
+                    )}
                   </div>
+
+                  <h3 className="mt-5 text-lg font-bold leading-snug text-white">
+                    {project.name}
+                  </h3>
+                  <p className="mt-1.5 text-[13px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-secondary)]">
+                    {project.tagline}
+                  </p>
+                  <p className="mt-3 line-clamp-2 text-[14px] leading-[1.45] text-white/65">
+                    {project.shortDescription}
+                  </p>
+
+                  <Link
+                    href={`/projects/${project.slug}`}
+                    aria-label={`Lihat detail ${project.name}`}
+                    className="mt-6 inline-flex h-8 w-fit items-center gap-2 rounded-lg border border-white/10 bg-[#0e121d] px-4 text-[14px] font-medium text-white transition-colors hover:bg-white/[0.06]"
+                  >
+                    Details
+                    <ArrowRight size={15} />
+                  </Link>
                 </motion.div>
               ))}
             </motion.div>
@@ -170,24 +189,23 @@ export default function PortfolioSection() {
           {activeTab === "certificates" && (
             <motion.div
               key="certificates"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
+              {...fade}
+              className="grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-3"
             >
-              {CERTIFICATES.map((cert) => (
-                <motion.div key={cert.id} variants={itemVariants} className="group">
-                  <div className="relative w-full overflow-hidden rounded-[var(--radius-lg)] border border-white/[0.08] bg-[var(--color-bg-card)] transition-[border-color,box-shadow] duration-[var(--transition-base)] group-hover:border-[var(--color-accent)]/50 group-hover:shadow-[0_0_20px_var(--color-accent-glow)]">
-                    <div className="flex aspect-[4/3] w-full items-center justify-center overflow-hidden p-2 sm:p-3">
-                      <Image
-                        src={cert.src}
-                        alt=""
-                        width={cert.width}
-                        height={cert.height}
-                        className="h-full w-full rounded-[var(--radius-md)] object-contain transition-transform duration-[var(--transition-slow)] group-hover:scale-[1.03]"
-                      />
-                    </div>
+              {CERTIFICATES.map((cert, i) => (
+                <motion.div
+                  key={cert.id}
+                  {...revealCard(i)}
+                  className={`p-[18px] ${CARD}`}
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden rounded-[10px] bg-[#121727]">
+                    <Image
+                      src={cert.src}
+                      alt={`Sertifikat ${cert.id}`}
+                      width={cert.width}
+                      height={cert.height}
+                      className="h-full w-full object-contain"
+                    />
                   </div>
                 </motion.div>
               ))}
@@ -197,21 +215,25 @@ export default function PortfolioSection() {
           {activeTab === "tech" && (
             <motion.div
               key="tech"
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
+              {...fade}
+              className="grid grid-cols-2 gap-[18px] sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
             >
-              {TECH_STACK.map((tech) => (
-                <motion.div key={tech.name} variants={itemVariants} className="card flex flex-col items-center justify-center gap-3 p-6 text-center hover:-translate-y-1 hover:shadow-lg hover:shadow-white/[0.02]">
-                  <tech.icon size={32} className="text-[var(--color-text-secondary)]" strokeWidth={1.5} />
+              {TECH_STACK.map((tech, i) => (
+                <motion.div
+                  key={tech.name}
+                  {...revealCard(i, 5)}
+                  whileHover={{ y: -4, transition: { duration: 0.25, ease: EASE } }}
+                  style={{ "--brand": tech.color } as CSSProperties}
+                  className={`tech-card group flex flex-col items-center justify-center gap-4 p-5 text-center ${CARD}`}
+                >
+                  <span className="tech-tile flex h-14 w-14 items-center justify-center rounded-2xl">
+                    {tech.logo}
+                  </span>
                   <span className="text-sm font-semibold text-white">{tech.name}</span>
                 </motion.div>
               ))}
             </motion.div>
           )}
-
         </AnimatePresence>
       </div>
     </section>

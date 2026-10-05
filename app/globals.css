@@ -6,7 +6,7 @@
 
 :root {
   /* ── Core palette ── */
-  --color-bg-primary: #06081a;
+  --color-bg-primary: #03050e;
   --color-bg-secondary: #0c0f2e;
   --color-bg-card: #111432;
   --color-bg-card-hover: #161a3e;
@@ -16,8 +16,8 @@
   --color-text-secondary: #a0a6c4;
   --color-text-muted: #6b7194;
 
-  --color-accent: #4167e8;
-  --color-accent-hover: #5a7ff0;
+  --color-accent: #3c66e5;
+  --color-accent-hover: #4d75ee;
   --color-accent-glow: rgba(65, 103, 232, 0.25);
 
   --color-border: rgba(255, 255, 255, 0.08);
@@ -36,8 +36,8 @@
   --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
 
   /* ── Fonts (inherited from layout.tsx) ── */
-  --font-sans: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --font-sans: Verdana, "DejaVu Sans", system-ui, sans-serif;
+  --font-mono: "DejaVu Sans Mono", Consolas, ui-monospace, monospace;
 }
 
 /* ── Tailwind v4 theme integration ── */
@@ -71,7 +71,11 @@ html {
 body {
   margin: 0;
   min-height: 100dvh;
-  background-color: var(--color-bg-primary);
+    background:
+    radial-gradient(ellipse 60% 55% at 100% 100%, rgba(20, 62, 112, 0.28), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 0% 0%, rgba(30, 50, 140, 0.16), transparent 70%),
+    var(--color-bg-primary);
+  background-attachment: fixed;
   color: var(--color-text-primary);
   font-family: var(--font-sans);
   line-height: 1.6;
@@ -128,5 +132,147 @@ body {
   border-radius: var(--radius-pill);
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-secondary);
+  background-color: var(--color-text-secondary);
+}
+
+/* ── Typing cursor blink ── */
+@keyframes blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+/* ── Foto About: crossfade ke versi Spider-Man saat hover ──
+   Hanya di perangkat yang benar-benar punya hover (desktop). Di layar sentuh
+   tidak ada state hover, jadi tidak akan "nyangkut" setelah tap. */
+.about-photo-img,
+.about-photo-spider {
+  transition:
+    opacity 600ms ease,
+    transform 700ms ease;
+}
+
+.about-photo-spider {
+  opacity: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .about-photo:hover .about-photo-spider {
+    opacity: 1;
+    transform: scale(1.025);
+  }
+  .about-photo:hover .about-photo-img {
+    transform: scale(1.025);
+  }
+  /* Foto normal ikut fade hanya kalau layer Spider-Man sudah benar-benar siap
+     (data-spider="ready" diset setelah file-nya termuat). Kalau file belum ada,
+     foto normal tetap utuh dan tidak ikut hilang saat di-hover. */
+  .about-photo[data-spider="ready"]:hover .about-photo-img {
+    opacity: 0;
+  }
+}
+
+/* Layar sentuh tidak punya state hover, jadi versi Spider-Man ditampilkan lewat
+   ketuk (lihat toggle di AboutSection). Aturan ini sengaja di luar media query
+   hover supaya bekerja di HP tanpa mengganggu perilaku desktop. */
+.about-photo[data-shown="true"] .about-photo-spider {
+  opacity: 1;
+  transform: scale(1.025);
+}
+
+.about-photo[data-shown="true"] .about-photo-img {
+  transform: scale(1.025);
+}
+
+.about-photo[data-shown="true"][data-spider="ready"] .about-photo-img {
+  opacity: 0;
+}
+
+/* ── Scrollbar tipis biru (Experience di About) ── */
+.about-scroll { scrollbar-width: thin; scrollbar-color: #1f3a8a transparent; }
+.about-scroll::-webkit-scrollbar { width: 5px; }
+.about-scroll::-webkit-scrollbar-track { background: transparent; }
+.about-scroll::-webkit-scrollbar-thumb { background: #1f3a8a; border-radius: 9999px; }
+
+/* ── Foto About: gradasi hitam di bawah dan di sisi kiri/kanan ──
+   Layer pertama = paling atas. Sisi memakai warna background penuh supaya
+   benar-benar gradasi (bukan hanya transparan) dan menyatu dengan halaman. */
+.about-photo-fade {
+  background:
+    linear-gradient(
+      to right,
+      var(--color-bg-primary) 0%,
+      color-mix(in srgb, var(--color-bg-primary) 45%, transparent) 8%,
+      transparent 18%
+    ),
+    linear-gradient(
+      to left,
+      var(--color-bg-primary) 0%,
+      color-mix(in srgb, var(--color-bg-primary) 45%, transparent) 8%,
+      transparent 18%
+    ),
+    linear-gradient(
+      to top,
+      var(--color-bg-primary) 0%,
+      color-mix(in srgb, var(--color-bg-primary) 82%, transparent) 22%,
+      color-mix(in srgb, var(--color-bg-primary) 45%, transparent) 38%,
+      transparent 58%
+    );
+}
+
+/* ── Kartu statistik About: garis tepi berputar ── */
+@property --stat-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+.stat-card {
+  border: 2px solid transparent;
+  background:
+    linear-gradient(#0f1322, #0f1322) padding-box,
+    conic-gradient(
+      from var(--stat-angle),
+      rgba(255, 255, 255, 0.08) 0deg,
+      rgba(255, 255, 255, 0.08) 45deg,
+      rgba(60, 102, 229, 0.85) 85deg,
+      rgba(255, 255, 255, 0.08) 115deg,
+      rgba(255, 255, 255, 0.08) 215deg,
+      rgba(60, 102, 229, 0.6) 255deg,
+      rgba(255, 255, 255, 0.8) 275deg,
+      #ffffff 300deg,
+      #ffffff 350deg,
+      rgba(255, 255, 255, 0.08) 360deg
+    ) border-box;
+  animation: stat-spin 6s linear infinite;
+}
+.stat-card:hover {
+  animation-duration: 1.1s;
+}
+@keyframes stat-spin {
+  to {
+    --stat-angle: 360deg;
+  }
+}
+
+/* ── Tech stack: tile logo + glow warna brand (--brand) ── */
+.tech-card {
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+.tech-card:hover {
+  border-color: color-mix(in oklab, var(--brand) 42%, transparent);
+  box-shadow: 0 10px 34px -14px color-mix(in oklab, var(--brand) 60%, transparent);
+}
+.tech-tile {
+  background: color-mix(in oklab, var(--brand) 14%, transparent);
+  transition:
+    background-color var(--transition-base),
+    box-shadow var(--transition-base),
+    transform var(--transition-base);
+}
+.tech-card:hover .tech-tile,
+.tech-card:focus-visible .tech-tile {
+  background: color-mix(in oklab, var(--brand) 26%, transparent);
+  box-shadow: 0 0 22px -6px color-mix(in oklab, var(--brand) 70%, transparent);
+  transform: scale(1.07);
 }

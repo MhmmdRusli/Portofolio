@@ -1,12 +1,14 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
-import type { Variants } from "motion/react";
-import { ArrowLeft, ArrowUpRight, GitBranch } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, Box, ChevronRight, Code, GitBranch } from "lucide-react";
+import type { CSSProperties } from "react";
 
-import ProjectCover from "@/app/components/ProjectCover";
 import type { Project } from "@/app/data/projects";
+import { findTech } from "@/app/data/tech";
+import { TechLogo } from "./icons";
 
 interface ProjectDetailProps {
   project: Project;
@@ -14,124 +16,138 @@ interface ProjectDetailProps {
 
 export default function ProjectDetail({ project }: ProjectDetailProps) {
   const reduceMotion = useReducedMotion();
-
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: reduceMotion ? 0 : 0.08 },
-    },
-  };
-
-  const itemVariants: Variants = {
-    hidden: { opacity: 0, y: reduceMotion ? 0 : 18 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: reduceMotion
-        ? { duration: 0 }
-        : { duration: 0.45, ease: "easeOut" },
-    },
-  };
-
   const hasLinks = Boolean(project.githubUrl || project.demoUrl);
+  const hasTechnologies = Boolean(project.technologies?.length);
 
   return (
     <motion.article
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="flex flex-col gap-10 py-16 lg:py-24"
+      initial={{ opacity: 0, y: reduceMotion ? 0 : 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: reduceMotion ? 0 : 0.45, ease: "easeOut" }}
+      className="mx-auto w-full max-w-[1078px] pb-24 pt-[53px]"
     >
-      {/* ── Back to Projects ── */}
-      <motion.div variants={itemVariants}>
+      {/* ── Back + breadcrumb ── */}
+      <div className="flex flex-wrap items-center gap-4">
         <Link
           href="/#portfolio"
-          className="group inline-flex items-center gap-2 rounded-full border border-white/[0.08] bg-[var(--color-bg-secondary)] px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition-colors duration-200 hover:border-[var(--color-accent)]/50 hover:text-white"
+          className="inline-flex h-[39px] items-center gap-2.5 rounded-xl border border-white/[0.08] bg-[#111726] px-5 text-base text-white transition-colors hover:bg-[#161d30]"
         >
-          <ArrowLeft
-            size={16}
-            strokeWidth={1.8}
-            className="transition-transform duration-200 group-hover:-translate-x-1"
-          />
-          Back to Projects
+          <ArrowLeft size={18} strokeWidth={1.8} />
+          Back
         </Link>
-      </motion.div>
 
-      {/* ── Heading ── */}
-      <motion.header variants={itemVariants} className="flex flex-col gap-4">
-        <span className="font-mono text-xs font-semibold uppercase tracking-widest text-[var(--color-accent)] sm:text-sm">
-          {project.category}
-        </span>
-        <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-4xl lg:text-5xl">
-          {project.name}
-        </h1>
-        <p className="max-w-2xl text-base text-[var(--color-text-muted)] sm:text-lg">
-          {project.shortDescription}
-        </p>
-      </motion.header>
+        <nav aria-label="Breadcrumb" className="flex items-center gap-3 text-base">
+          <Link href="/#portfolio" className="text-white/50 transition-colors hover:text-white">
+            Projects
+          </Link>
+          <ChevronRight size={16} className="text-white/50" />
+          <span className="text-white">{project.name}</span>
+        </nav>
+      </div>
 
-      {/* ── Actions ── */}
-      {hasLinks && (
-        <motion.div variants={itemVariants} className="flex flex-wrap gap-3">
-          {project.demoUrl && (
-            <a
-              href={project.demoUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl bg-[var(--color-accent)] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_0_15px_var(--color-accent-glow)] transition-[background-color,box-shadow,transform] duration-200 hover:-translate-y-0.5 hover:bg-[var(--color-accent-hover)] hover:shadow-[0_0_22px_var(--color-accent-glow)]"
-            >
-              <ArrowUpRight size={16} strokeWidth={2} />
-              Live Demo
-            </a>
+      {/* ── Konten 2 kolom ── */}
+      <div className="mt-10 grid grid-cols-1 gap-12 lg:grid-cols-[1fr_510px] lg:gap-14">
+        {/* Kiri */}
+        <div className="min-w-0">
+          <h1 className="text-[clamp(2.25rem,4vw,3.25rem)] font-extrabold leading-none text-white">
+            {project.name}
+          </h1>
+
+          <p className="mt-4 text-sm font-semibold uppercase tracking-[0.08em] text-[var(--color-text-secondary)]">
+            {project.tagline}
+          </p>
+
+          <p className="mt-10 max-w-[508px] text-base leading-[1.53] text-white/70">
+            {project.description}
+          </p>
+
+          {hasTechnologies && (
+            <>
+              <h2 className="mt-12 flex items-center gap-3 text-xl font-bold text-white">
+                <Code size={18} className="text-white/60" />
+                Technologies Used
+              </h2>
+
+              <ul className="mt-5 flex flex-wrap gap-2.5">
+                {project.technologies!.map((name) => {
+                  const tech = findTech(name);
+                  return (
+                    <li
+                      key={name}
+                      style={
+                        tech
+                          ? ({ "--brand": tech.color } as CSSProperties)
+                          : undefined
+                      }
+                      className="tech-card inline-flex h-11 items-center gap-2.5 rounded-xl border border-white/[0.08] bg-[#0f1527] px-4 text-base text-white/90"
+                    >
+                      {tech ? (
+                        <span className="tech-tile flex h-7 w-7 shrink-0 items-center justify-center rounded-lg">
+                          <TechLogo tech={tech} size={17} />
+                        </span>
+                      ) : (
+                        // Teknologi tanpa entri di @/app/data/tech: tambah di sana
+                        // supaya logo dan warnanya konsisten dengan Tech Stack.
+                        <Box
+                          size={16}
+                          strokeWidth={1.6}
+                          className="shrink-0 text-white/70"
+                        />
+                      )}
+                      {name}
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
           )}
-          {project.githubUrl && (
-            <a
-              href={project.githubUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/[0.08] bg-[var(--color-bg-card)] px-5 py-2.5 text-sm font-semibold text-white transition-[background-color,border-color,transform] duration-200 hover:-translate-y-0.5 hover:border-[var(--color-accent)]/50 hover:bg-[var(--color-bg-card-hover)]"
-            >
-              <GitBranch size={16} strokeWidth={2} />
-              GitHub
-            </a>
+
+          {hasLinks && (
+            <div className="mt-8 flex flex-wrap gap-3">
+              {project.demoUrl && (
+                <a
+                  href={project.demoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-[39px] items-center gap-2 rounded-[10px] bg-[#3c66e5] px-[18px] text-[15px] font-bold text-white transition-colors hover:bg-[#4a73ee]"
+                >
+                  Live Demo
+                  <ArrowUpRight size={16} strokeWidth={1.8} />
+                </a>
+              )}
+              {project.githubUrl && (
+                <a
+                  href={project.githubUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex h-[39px] items-center gap-2 rounded-[10px] border border-white/10 px-[18px] text-[15px] font-bold text-white transition-colors hover:bg-white/5"
+                >
+                  <GitBranch size={16} strokeWidth={1.8} />
+                  GitHub
+                </a>
+              )}
+            </div>
           )}
-        </motion.div>
-      )}
+        </div>
 
-      {/* ── Cover ── */}
-      <motion.div variants={itemVariants} className="group overflow-hidden rounded-[var(--radius-lg)] border border-white/[0.08] transition-[border-color,box-shadow] duration-[var(--transition-base)] hover:border-[var(--color-accent)]/50 hover:shadow-[0_0_20px_var(--color-accent-glow)]">
-        <ProjectCover
-          src={project.image}
-          alt={`${project.name} project cover preview`}
-          sizes="(min-width: 1024px) 66vw, 100vw"
-        />
-      </motion.div>
-
-      {/* ── About ── */}
-      <motion.section variants={itemVariants} className="card p-6 sm:p-8">
-        <h2 className="mb-4 text-xl font-bold text-white sm:text-2xl">About</h2>
-        <p className="text-sm leading-relaxed text-[var(--color-text-muted)] sm:text-base">
-          {project.description}
-        </p>
-      </motion.section>
-
-      {/* ── Technologies ── */}
-      <motion.section variants={itemVariants} className="card p-6 sm:p-8">
-        <h2 className="mb-4 text-xl font-bold text-white sm:text-2xl">
-          Technologies Used
-        </h2>
-        <ul className="flex flex-wrap gap-2">
-          {project.technologies.map((tech) => (
-            <li
-              key={tech}
-              className="rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-sm font-medium text-[var(--color-text-secondary)]"
-            >
-              {tech}
-            </li>
-          ))}
-        </ul>
-      </motion.section>
+        {/* Kanan: gambar proyek */}
+        <div className="relative aspect-[1020/453] w-full overflow-hidden rounded-[20px] border border-white/10 bg-[#121727]">
+          {project.image ? (
+            <Image
+              src={project.image}
+              alt={`Preview ${project.name}`}
+              fill
+              sizes="(min-width: 1024px) 510px, 100vw"
+              className="object-cover"
+              priority
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center">
+              <Code size={36} className="text-white/25" />
+            </div>
+          )}
+        </div>
+      </div>
     </motion.article>
   );
 }

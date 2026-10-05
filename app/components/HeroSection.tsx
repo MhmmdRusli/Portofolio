@@ -1,95 +1,93 @@
 "use client";
 
 import { motion } from "motion/react";
-import { ArrowRight, Mail } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
+
 import DailyRotationWidget from "./DailyRotationWidget";
+import TypingText from "./TypingText";
+import { GithubIcon, InstagramIcon, LinkedinIcon } from "./icons";
+
+const ROLES = [
+  "Junior Full Stack Developer",
+  "Web Developer",
+  "Laravel Developer",
+  "React Developer",
+] as const;
+
+const SOCIALS = [
+  { label: "GitHub", href: "https://github.com/MhmmdRusli", Icon: GithubIcon },
+  { label: "LinkedIn", href: "https://www.linkedin.com/in/muhammad-rusli-0389b4404/", Icon: LinkedinIcon },
+  { label: "Instagram", href: "https://instagram.com/_rsliilsr", Icon: InstagramIcon },
+];
 
 export default function HeroSection() {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.1,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      transition: { duration: 0.5, ease: "easeOut" as any },
-    },
-  };
-
   return (
-    <section
-      id="home"
-      className="flex min-h-[calc(100vh-12rem)] flex-col items-center justify-center py-10 lg:flex-row lg:justify-between lg:gap-12"
-    >
-      {/* ── Left Side: Hero Content ── */}
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="flex w-full flex-col items-center text-center lg:items-start lg:text-left lg:w-1/2"
-      >
-        <motion.span
-          variants={itemVariants}
-          className="mb-4 font-mono text-sm font-semibold tracking-widest text-[var(--color-accent)]"
-        >
-          HELLO, I&apos;M
-        </motion.span>
-        
-        <motion.h1
-          variants={itemVariants}
-          className="mb-2 text-5xl font-extrabold leading-[1.1] tracking-tight text-white sm:text-6xl md:text-7xl lg:text-8xl"
-        >
-          Muhammad Rusli
-        </motion.h1>
-        
-        <motion.h2
-          variants={itemVariants}
-          className="mb-6 text-2xl font-medium text-[var(--color-text-secondary)] sm:text-3xl lg:text-4xl"
-        >
-          Junior Full Stack <span className="text-white">Developer</span>
-        </motion.h2>
-        
-        <motion.p
-          variants={itemVariants}
-          className="mb-10 max-w-xl text-lg text-[var(--color-text-muted)] sm:text-xl"
-        >
-          Junior Full Stack Developer who loves building modern web applications.
-        </motion.p>
-        
+    <section id="home" className="flex min-h-screen items-center pb-10 pt-28">
+      <div className="mx-auto flex w-full max-w-[1152px] flex-col gap-14 lg:flex-row lg:items-center lg:justify-between">
+        {/* ── Left: text ── */}
         <motion.div
-          variants={itemVariants}
-          className="flex flex-wrap items-center justify-center gap-4 lg:justify-start"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="flex-1"
         >
-          <a
-            href="#portfolio"
-            className="group flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--color-accent)] px-6 font-medium text-white transition-all hover:bg-[var(--color-accent-hover)] hover:shadow-lg hover:shadow-[var(--color-accent-glow)] active:scale-95"
-          >
-            View My Work
-            <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
-          </a>
-          <a
-            href="#contact"
-            className="group flex h-12 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/5 px-6 font-medium text-white transition-all hover:bg-white/10 active:scale-95"
-          >
-            <Mail size={18} />
-            Contact Me
-          </a>
-        </motion.div>
-      </motion.div>
+          <h1 className="text-[clamp(2.75rem,5.6vw,4.5rem)] font-bold leading-[1.07]">
+            <span className="block text-[var(--color-accent)]">Turning Ideas</span>
+            <span className="block text-white">Into Reality</span>
+          </h1>
 
-      {/* ── Right Side: Daily Rotation Widget ── */}
-      <div className="mt-16 flex w-full justify-center lg:mt-0 lg:w-1/2 lg:justify-end">
-        <DailyRotationWidget />
+          <TypingText
+            words={ROLES}
+            className="mt-5 font-mono text-lg tracking-wide text-[#dce6fa]"
+          />
+
+          <p className="mt-8 max-w-[480px] text-lg leading-[1.55] text-[#c9cfe3]">
+            Dimulai dari rasa penasaran, berkembang menjadi passion. Aku
+            membangun pengalaman digital yang tidak hanya terlihat bagus, tapi
+            juga terasa bermakna bagi penggunanya.
+          </p>
+
+          <div className="mt-7 flex flex-wrap items-center gap-3">
+            <a
+              href="#portfolio"
+              className="inline-flex h-11 items-center gap-2 rounded-lg bg-[var(--color-accent)] px-5 text-base font-bold text-white transition-colors hover:bg-[var(--color-accent-hover)]"
+            >
+              Project
+              <ExternalLink size={16} strokeWidth={1.8} />
+            </a>
+            <a
+              href="#contact"
+              className="inline-flex h-11 items-center gap-2 rounded-lg border border-white/10 px-5 text-base font-bold text-white transition-colors hover:bg-white/5"
+            >
+              Contact Me
+              <ArrowRight size={16} strokeWidth={1.8} />
+            </a>
+          </div>
+
+          <div className="mt-7 flex items-center gap-4">
+            <span className="font-mono text-xs tracking-wider text-[#70a3f4]">FIND ME</span>
+            <ul className="flex gap-3">
+              {SOCIALS.map(({ label, href, Icon }) => (
+                <li key={label}>
+                  <a
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    className="flex h-11 w-11 items-center justify-center rounded-lg border border-white/[0.08] bg-[#090b13] text-[#70a3f4] transition-colors hover:border-[var(--color-accent)]/60 hover:text-white"
+                  >
+                    <Icon size={22} />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </motion.div>
+
+        {/* ── Right: Daily Rotation ── */}
+        <div className="flex w-full justify-center lg:w-[45%] lg:max-w-[560px] lg:justify-end">
+          <DailyRotationWidget />
+        </div>
       </div>
     </section>
   );
