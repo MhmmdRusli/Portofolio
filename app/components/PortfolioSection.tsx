@@ -196,15 +196,16 @@ export default function PortfolioSection() {
                 <motion.div
                   key={cert.id}
                   {...revealCard(i)}
-                  className={`p-[18px] ${CARD}`}
+                  whileHover={{ y: -4, transition: { duration: 0.25, ease: EASE } }}
+                  className={`cert-card group p-[18px] ${CARD}`}
                 >
                   <div className="relative aspect-[4/3] overflow-hidden rounded-[10px] bg-[#121727]">
                     <Image
                       src={cert.src}
-                      alt={`Sertifikat ${cert.id}`}
+                      alt={cert.title ?? `Sertifikat ${cert.id}`}
                       width={cert.width}
                       height={cert.height}
-                      className="h-full w-full object-contain"
+                      className="h-full w-full object-contain transition-transform duration-[400ms] ease-out group-hover:scale-[1.04]"
                     />
                   </div>
                 </motion.div>

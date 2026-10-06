@@ -52,6 +52,15 @@ const stagger = (step: number) => ({
 
 /* ═══════════════ DATA ═══════════════ */
 
+/**
+ * Endpoint Formspree untuk form "Hubungi".
+ *
+ * Jangan diubah tanpa alasan: ini ID form milik pemilik portfolio, hasil signup
+ * di formspree.io. Mengganti endpoint akan membuat mail masuk ke form yang salah.
+ * Kalau perlu form baru, buat di formspree.io lalu tukar nilainya di sini.
+ */
+const FORMSPREE_ENDPOINT = "https://formspree.io/f/mljgrqkl";
+
 const SOCIALS = [
   {
     title: "Let's Connect",
@@ -105,27 +114,102 @@ const RIGHT_FIELD =
 /* ═══════════════ SECTION ═══════════════ */
 
 export default function ContactSection() {
-  /* ── Form Hubungi (simulasi, tanpa backend) ── */
+  /* ── Form Hubungi (kirim via Formspree) ── */
   const [contact, setContact] = useState({ name: "", email: "", message: "" });
-  const [sendStatus, setSendStatus] = useState<"idle" | "sending" | "sent">("idle");
+  const [sendStatus, setSendStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [sendError, setSendError] = useState("");
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  /**
+   * Kunci anti-request-ganda.
+   *
+   * Tidak boleh pakai `sendStatus` untuk ini: state React baru ter-update
+   * setelah re-render, jadi lima klik cepat dalam satu tick semuanya masih
+   * terbaca "idle" dan lolos. Ref berubah sinkron di dalam handler.
+   */
+  const sendingRef = useRef(false);
 
   useEffect(() => {
     const list = timers.current;
     return () => list.forEach(clearTimeout);
   }, []);
 
-  const submitContact = (e: React.FormEvent<HTMLFormElement>) => {
+  const submitContact = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (sendStatus !== "idle") return;
+    if (sendingRef.current) return;
+
+    // Lapis kedua di atas validasi native browser. `required` + `type="email"`
+    // sudah menahan field kosong, tapi guard ini tetap jaring pengaman kalau
+    // atributnya nanti berubah — tanpa ini request tetap bisa keluar isinya
+    // hampir kosong.
+    const name = contact.name.trim();
+    const email = contact.email.trim();
+    const message = contact.message.trim();
+
+    if (!name || !email || !message) {
+      setSendStatus("error");
+      setSendError("Nama, email, dan pesan wajib diisi.");
+      return;
+    }
+
+    if (!FORMSPREE_ENDPOINT) {
+      setSendStatus("error");
+      setSendError("Form belum dikonfigurasi. Isi FORMSPREE_ENDPOINT di ContactSection.tsx dengan URL dari formspree.io.");
+      return;
+    }
+
+    sendingRef.current = true;
     setSendStatus("sending");
-    timers.current.push(
-      setTimeout(() => {
-        setSendStatus("sent");
-        setContact({ name: "", email: "", message: "" });
-        timers.current.push(setTimeout(() => setSendStatus("idle"), 4000));
-      }, 1200),
-    );
+    setSendError("");
+
+    try {
+      // FormData (bukan JSON) dipilih supaya browser memakai
+      // multipart/form-data yang CORS-safe → tidak ada preflight OPTIONS,
+      // jadi satu round-trip saja dan tidak bisa gagal karena CORS.
+      // Header Accept tetap dikirim supaya Formspree membalas JSON, bukan
+      // halaman HTML.
+      const payload = new FormData();
+      payload.set("name", name);
+      payload.set("email", email);
+      payload.set("message", message);
+      // Subjek email + agar bisa dibalas langsung ke pengirim.
+      payload.set("_subject", `Pesan baru dari portfolio — ${name}`);
+      payload.set("_replyto", email);
+
+      const res = await fetch(FORMSPREE_ENDPOINT, {
+        method: "POST",
+        headers: { Accept: "application/json" },
+        body: payload,
+      });
+
+      if (!res.ok) {
+        // Formspree membalas JSON berisi `errors` saat submission ditolak
+        // (mis. domain belum diaktivasi) — dipakai untuk pesan yang lebih
+        // informatif daripada "HTTP 4xx" polos.
+        const detail = await res
+          .json()
+          .then((d) => d?.errors?.[0]?.message)
+          .catch(() => undefined);
+        throw new Error(detail || `HTTP ${res.status}`);
+      }
+
+      // Reset HANYA setelah request sukses (try hanya sampai sini).
+      setSendStatus("sent");
+      setContact({ name: "", email: "", message: "" });
+      timers.current.push(
+        setTimeout(() => {
+          sendingRef.current = false;
+          setSendStatus("idle");
+        }, 4000),
+      );
+    } catch (err) {
+      // Pesan sengaja TIDAK dikosongkan di jalur gagal, biar visitor tidak
+      // kehilangan isi yang sudah diketik.
+      sendingRef.current = false;
+      setSendStatus("error");
+      setSendError(
+        `${err instanceof Error && err.message ? err.message + " — " : ""}Gagal terkirim. Coba lagi, atau hubungi saya lewat LinkedIn / GitHub.`,
+      );
+    }
   };
 
   /* ── Komentar (disimpan di memori browser saja) ── */
@@ -240,14 +324,48 @@ export default function ContactSection() {
               />
             </div>
 
+            {/* Honeypot Formspree: bot mengisi semua field tersembunyi, manusia tidak.
+                Terisi = Formspree diam-diam membuang submission. */}
+            <input
+              type="text"
+              name="_gotcha"
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              className="hidden"
+            />
+
             <button
               type="submit"
-              disabled={sendStatus !== "idle"}
+              disabled={sendStatus === "sending"}
               className="mt-[5px] flex h-[49px] w-full items-center justify-center gap-2.5 rounded-xl bg-[#3c66e5] text-base font-bold text-white transition-colors hover:bg-[#4a73ee] disabled:opacity-80"
             >
               <Send size={18} strokeWidth={1.8} />
-              {sendStatus === "sending" ? "Mengirim..." : sendStatus === "sent" ? "Pesan terkirim" : "Kirim Pesan"}
+              {sendStatus === "sending"
+                ? "Mengirim..."
+                : sendStatus === "sent"
+                  ? "Pesan terkirim"
+                  : sendStatus === "error"
+                    ? "Coba Lagi"
+                    : "Kirim Pesan"}
             </button>
+
+            {/* Status result — live region supaya screen reader ikut membacanya. */}
+            <p
+              role="status"
+              aria-live="polite"
+              className={`text-center text-sm leading-snug ${
+                sendStatus === "sent"
+                  ? "text-emerald-400"
+                  : sendStatus === "error"
+                    ? "text-red-400"
+                    : "sr-only"
+              }`}
+            >
+              {sendStatus === "sent"
+                ? "Terima kasih! Pesan sudah terkirim, saya akan membalas via email."
+                : sendError}
+            </p>
           </form>
 
           <div className="mt-[35px] border-t border-white/[0.06] pt-[30px]">

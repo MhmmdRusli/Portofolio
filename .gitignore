@@ -24,6 +24,10 @@
 .DS_Store
 *.pem
 
+# aset sumber (master aset mentah, mis. PNG sebelum di-convert ke WebP).
+# Tidak ikut ter-deploy dan tidak perlu di-version; sudah tersedia di riwayat git.
+assets-source/
+
 # debug
 npm-debug.log*
 yarn-debug.log*

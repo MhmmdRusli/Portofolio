@@ -253,6 +253,19 @@ body {
   }
 }
 
+/* ── Sertifikat: glow biru + zoom gambar saat hover ──
+   `transition` di sini menimpa `transition-colors` dari CARD, supaya box-shadow
+   ikut teranimasi dan bukan tiba-tiba muncul. CSS tanpa layer menang atas utility
+   Tailwind, jadi yang berlaku adalah transition ini. */
+.cert-card {
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+.cert-card:hover {
+  box-shadow: 0 16px 42px -18px color-mix(in oklab, var(--color-accent) 65%, transparent);
+}
+
 /* ── Tech stack: tile logo + glow warna brand (--brand) ── */
 .tech-card {
   transition:
